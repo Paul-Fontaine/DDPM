@@ -110,7 +110,7 @@ class GaussianDiffusion(nn.Module):
         return posterior_mean, posterior_variance
 
     @torch.no_grad()
-    def p_sample(self, x, t, y: List[int | None] = None, cfg_scale: float = 3.0):
+    def p_sample(self, x, t, y: List[int] = None, cfg_scale: float = 3.0):
         """
         :param x: [B, C, H, W] current noisy image
         :param t: [B] urrent timestep
@@ -139,7 +139,7 @@ class GaussianDiffusion(nn.Module):
         return posterior_mean + torch.sqrt(posterior_variance) * noise
 
     @torch.no_grad()
-    def p_sample_loop(self, images_shape, y: List[int | None], cfg_scale: float = 3.0):
+    def p_sample_loop(self, images_shape, y: List[int] = None, cfg_scale: float = 3.0):
         """
         :param images_shape: (C, H, W) — output image image_shape
         :param y: class labels of the images to generate. If labels are None, unconditional generation.

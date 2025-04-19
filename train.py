@@ -81,7 +81,7 @@ for epoch in range(epochs):
     model.eval()
     with torch.no_grad():
         class_labels = torch.arange(num_classes, device=device).repeat(n_images_generated_per_class, 1).flatten()
-        sampled = diffusion.p_sample_loop(images_shape=images_shape, class_labels=class_labels)
+        sampled = diffusion.p_sample_loop(images_shape=images_shape, y=class_labels)
 
         grid = make_grid(sampled, nrow=n_images_generated_per_class)
         writer.add_image("Samples", grid, epoch)
