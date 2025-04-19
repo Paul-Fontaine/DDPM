@@ -55,7 +55,7 @@ for epoch in range(epochs):
             if num_classes is not None:
                 drop_mask = torch.rand(labels.shape[0], device=device) < drop_label_prob
                 y = labels.clone()
-                y[drop_mask] = None
+                y[drop_mask] = -1  # -1 indicates no label
             else:
                 y = None
 

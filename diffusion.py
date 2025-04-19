@@ -44,6 +44,7 @@ class GaussianDiffusion(nn.Module):
             betas = linear_beta_schedule(timesteps)
         else:
             raise NotImplementedError(f"{beta_schedule} schedule not supported")
+        betas = betas.to(device)
 
         # Register buffers (non-trainable constants)
         self.register_buffer("betas", betas)
@@ -77,22 +78,18 @@ class GaussianDiffusion(nn.Module):
         sqrt_one_minus_alpha_cumprod_t = self._extract(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape)
         return sqrt_alpha_cumprod_t * x_start + sqrt_one_minus_alpha_cumprod_t * noise
 
-    def p_losses(self, x_start, t, cond=None, guidance_dropout=0.1):
+    def p_losses(self, x_start, t, y):
         """
         Training loss function.
         x_start: clean image [B, C, H, W]
         t: time step [B]
-        cond: condition vector (e.g., class embedding) [B, D] or None
+        y: class labels
         Returns: scalar loss
         """
         noise = torch.randn_like(x_start)  # [B, C, H, W]
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)  # [B, C, H, W]
 
-        # Classifier-Free Guidance dropout
-        if cond is not None and torch.rand(1).item() < guidance_dropout:
-            cond = None  # Drop condition (simulate unconditioned)
-
-        predicted_noise = self.model(x_noisy, t, cond)  # [B, C, H, W]
+        predicted_noise = self.model(x_noisy, t, y)  # [B, C, H, W]
         return F.mse_loss(predicted_noise, noise)
 
     @torch.no_grad()

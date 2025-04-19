@@ -121,9 +121,9 @@ class UNet(nn.Module):
 
     def forward(self, x, t, y=None):
         """
-        x: [B, in_ch, H, W]
-        t: [B]
-        y: [B] or None
+        :param x: [B, C, H, W]
+        :param t: [B]
+        :param y: [B] or None
         """
         B = x.size(0)
 
@@ -132,7 +132,9 @@ class UNet(nn.Module):
         t_emb = self.time_mlp(t_emb)
 
         if self.num_classes is not None and y is not None:
-            y_emb = self.class_emb(y)
+            y_mask = (y != -1)  # find dropped labels for unconditional generation
+            y_emb = self.class_emb(torch.clamp(y, min=0))  # embedd all labels, even if dropped
+            y_emb[~y_mask] = 0.0  # set dropped labels embedding to zero
             t_emb = t_emb + y_emb
 
         # Initial conv
