@@ -143,10 +143,10 @@ class UNet(nn.Module):
 
         # Downsampling
         for i in range(self.depth):
+            skips.append(h)
             h = self.pool(h)
             h = self.downs[i](h)
             h = self.down_film[i](h, t_emb)
-            skips.append(h)
 
         # Bottleneck
         h = self.bottleneck_block(h)
