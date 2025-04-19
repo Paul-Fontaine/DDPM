@@ -15,7 +15,7 @@ from unet import UNet
 from diffusion import GaussianDiffusion
 
 # --- Config ---
-epochs = 10
+epochs = 20
 batch_size = 128
 lr = 2e-4
 images_shape = (1, 28, 28)  # MNIST images
