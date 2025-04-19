@@ -164,5 +164,5 @@ class GaussianDiffusion(nn.Module):
         Returns: tensor of shape [B, 1, 1, 1] for broadcasting
         """
         batch_size = t.shape[0]
-        out = a.gather(-1, t.cpu()).to(self.device)  # [B]
+        out = a.gather(-1, t.to(a.device)).to(self.device)  # [B]
         return out.view(batch_size, *((1,) * (len(x_shape) - 1)))  # [B, 1, 1, 1]
