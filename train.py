@@ -50,6 +50,7 @@ for epoch in range(epochs):
         for i, (images, labels) in enumerate(tqdm_loader):
             images = images.to(device)
             labels = labels.to(device)
+            B = labels.shape[0]
 
             # --- Drop labels randomly for CFG ---
             if num_classes is not None:
@@ -59,7 +60,11 @@ for epoch in range(epochs):
             else:
                 y = None
 
-            loss = diffusion.p_losses(images, y)
+            # Icrease the maximum noise level linearly
+            t_max = int(diffusion.timesteps * (epoch+1/10)) if epoch < 10 else diffusion.timesteps
+            t = torch.randint(0, t_max, (B,), dtype=torch.int16, device=device)
+
+            loss = diffusion.p_losses(images, t, y)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
