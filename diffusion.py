@@ -119,6 +119,8 @@ class GaussianDiffusion(nn.Module):
         :return: x_t-1: [B, C, H, W] denoised image
         """
         # Unconditional prediction (y = None)
+        print(f"x shape : {x.shape}")
+        print(f"t shape : {t.shape}")
         eps_uncond = self.model(x, t, y=None)
 
         if y is not None:
