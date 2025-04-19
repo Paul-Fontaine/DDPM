@@ -16,10 +16,10 @@ from diffusion import GaussianDiffusion
 
 # --- Config ---
 epochs = 20
-batch_size = 128
+batch_size = 10
 lr = 2e-4
 images_shape = (1, 28, 28)  # MNIST images
-num_classes = 10
+num_classes = None
 drop_label_prob = 0.1  # For classifier-free guidance
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -38,55 +38,68 @@ log_dir = "./runs/ddpm_mnist"
 os.makedirs("samples", exist_ok=True)
 writer = SummaryWriter(log_dir=log_dir)
 
-global_step = 0
 
-# --- Training loop ---
-for epoch in range(epochs):
-    model.train()
-    total_loss = 0
+def train_ddpm():
+    global_step = 0
 
-    with tqdm(loader, desc=f"Epoch {epoch+1}/{epochs}", unit="batch") as tqdm_loader:
-        tqdm_loader.set_postfix(loss=0)
-        for i, (images, labels) in enumerate(tqdm_loader):
-            images = images.to(device)
-            labels = labels.to(device)
-            B = labels.shape[0]
+    # --- Training loop ---
+    for epoch in range(epochs):
+        model.train()
+        total_loss = 0
 
-            # --- Drop labels randomly for CFG ---
+        with tqdm(loader, desc=f"Epoch {epoch+1}/{epochs}", unit="batch") as tqdm_loader:
+            tqdm_loader.set_postfix(loss=0)
+            for i, (images, labels) in enumerate(tqdm_loader):
+                print(f"Batch {i+1}/{len(loader)}")
+                images = images.to(device)
+                labels = labels.to(device)
+                B = labels.shape[0]
+
+                # --- Drop labels randomly for CFG ---
+                if num_classes is not None:
+                    drop_mask = torch.rand(labels.shape[0], device=device) < drop_label_prob
+                    y = labels.clone()
+                    y[drop_mask] = -1  # -1 indicates no label
+                else:
+                    y = None
+
+                # Icrease the maximum noise level linearly
+                t_max = int(diffusion.timesteps * (epoch+1/10)) if epoch < 10 else diffusion.timesteps
+                t = torch.randint(0, t_max, (B,), dtype=torch.int16, device=device)
+
+                print("start training")
+                loss = diffusion.p_losses(images, t, y)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+                print("logging")
+                tqdm_loader.set_postfix(loss=loss.item())
+                writer.add_scalar("Loss", loss.item(), global_step)
+                total_loss += loss.item()
+                global_step += 1
+
+        avg_loss = total_loss / len(loader)
+        writer.add_scalar("Average Loss", avg_loss, epoch)
+
+        # --- Sampling ---
+        print("Sampling...")
+        model.eval()
+        with torch.no_grad():
             if num_classes is not None:
-                drop_mask = torch.rand(labels.shape[0], device=device) < drop_label_prob
-                y = labels.clone()
-                y[drop_mask] = -1  # -1 indicates no label
+                class_labels = torch.arange(num_classes, device=device).repeat(n_images_generated_per_class, 1).flatten()
             else:
-                y = None
+                class_labels = None
+            sampled = diffusion.p_sample_loop(images_shape=images_shape, y=class_labels)
 
-            # Icrease the maximum noise level linearly
-            t_max = int(diffusion.timesteps * (epoch+1/10)) if epoch < 10 else diffusion.timesteps
-            t = torch.randint(0, t_max, (B,), dtype=torch.int16, device=device)
+            grid = make_grid(sampled, nrow=n_images_generated_per_class)
+            writer.add_image("Samples", grid, epoch)
 
-            loss = diffusion.p_losses(images, t, y)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+        # --- Save checkpoint ---
+        torch.save(model.state_dict(), f"unet_weights.pt")
 
-            tqdm_loader.set_postfix(loss=loss.item())
-            writer.add_scalar("Loss", loss.item(), global_step)
-            total_loss += loss.item()
-            global_step += 1
+    writer.close()
 
-    avg_loss = total_loss / len(loader)
-    writer.add_scalar("Average Loss", avg_loss, epoch)
 
-    # --- Sampling ---
-    model.eval()
-    with torch.no_grad():
-        class_labels = torch.arange(num_classes, device=device).repeat(n_images_generated_per_class, 1).flatten()
-        sampled = diffusion.p_sample_loop(images_shape=images_shape, y=class_labels)
-
-        grid = make_grid(sampled, nrow=n_images_generated_per_class)
-        writer.add_image("Samples", grid, epoch)
-
-    # --- Save checkpoint ---
-    torch.save(model.state_dict(), f"unet_weights.pt")
-
-writer.close()
+if __name__ == "__main__":
+    train_ddpm()

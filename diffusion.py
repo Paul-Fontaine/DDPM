@@ -148,7 +148,7 @@ class GaussianDiffusion(nn.Module):
         :param cfg_scale: CFG guidance strength
         :return: [B, C, H, W] generated images
         """
-        B = len(y)
+        B = len(y) if y is not None else 1
         imgs = torch.randn(images_shape, device=self.device)
 
         for i in reversed(range(0, self.timesteps)):
