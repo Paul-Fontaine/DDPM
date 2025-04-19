@@ -97,13 +97,13 @@ class UNet(nn.Module):
         # Downsampling blocks
         self.downs = nn.ModuleList()
         self.down_film = nn.ModuleList()
-        channels = [base_ch]
         for i in range(depth):
             in_c = base_ch * (2 ** i)
             out_c = base_ch * (2 ** (i + 1))
             self.downs.append(Block(in_c, out_c))
             self.down_film.append(FiLM(out_c, time_emb_dim))
-            channels.append(out_c)
+
+        self.bottleneck_block = Block(out_c, out_c)
 
         # Upsampling blocks
         self.ups = nn.ModuleList()
@@ -148,8 +148,8 @@ class UNet(nn.Module):
             h = self.down_film[i](h, t_emb)
             skips.append(h)
 
-        # Bottleneck = last downsampled h
-        h = skips.pop()
+        # Bottleneck
+        h = self.bottleneck_block(h)
 
         # Upsampling
         for i in range(self.depth):
