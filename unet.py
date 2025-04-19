@@ -166,5 +166,5 @@ class UNet(nn.Module):
         Load weights from a pretrained model.
         :param path: path to the pretrained model.
         """
-        state_dict = torch.load(path, map_location=device, weight_only=True)
-        self.load_state_dict(state_dict['model'], strict=False)
+        state_dict = torch.load(path, map_location=device, weights_only=True)
+        self.load_state_dict(state_dict)

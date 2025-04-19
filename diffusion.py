@@ -4,6 +4,7 @@ from typing import List
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.utils import make_grid
 
 
 # Cosine schedule from Nichol & Dhariwal
@@ -110,7 +111,7 @@ class GaussianDiffusion(nn.Module):
         return posterior_mean, posterior_variance
 
     @torch.no_grad()
-    def p_sample(self, x, t, y: List[int] = None, cfg_scale: float = 3.0):
+    def p_sample(self, x, t, y: List[int] = None, cfg_scale: float = 5.0):
         """
         :param x: [B, C, H, W] current noisy image
         :param t: [B] urrent timestep
@@ -119,8 +120,6 @@ class GaussianDiffusion(nn.Module):
         :return: x_t-1: [B, C, H, W] denoised image
         """
         # Unconditional prediction (y = None)
-        print(f"x shape : {x.shape}")
-        print(f"t shape : {t.shape}")
         eps_uncond = self.model(x, t, y=None)
 
         if y is not None:
@@ -141,21 +140,34 @@ class GaussianDiffusion(nn.Module):
         return posterior_mean + torch.sqrt(posterior_variance) * noise
 
     @torch.no_grad()
-    def p_sample_loop(self, images_shape, y: List[int] = None, cfg_scale: float = 3.0):
+    def p_sample_loop(self, images_shape, y: List[int] = None, cfg_scale: float = 5.0):
         """
         :param images_shape: (C, H, W) — output image image_shape
-        :param y: class labels of the images to generate. If labels are None, unconditional generation.
+        :param y: class labels of the images to generate. If y = None, sample 10 images without conditions.
         :param cfg_scale: CFG guidance strength
         :return: [B, C, H, W] generated images
         """
-        B = len(y) if y is not None else 1
-        imgs = torch.randn(images_shape, device=self.device)
+        B = len(y) if y is not None else 10
+        imgs = torch.randn((B, *images_shape), device=self.device)  # [B, C, H, W]
 
         for i in reversed(range(0, self.timesteps)):
             t = torch.full((B,), i, device=self.device, dtype=torch.long)
             imgs = self.p_sample(imgs, t, y=y, cfg_scale=cfg_scale)
 
         return imgs
+
+    def sample(self, num_classes, images_shape, cfg_scale, device):
+        """
+        :return: grid of images with shape [5, num_classes] because it samples 5 images for each class.
+        """
+        self.eval()
+        self.model.eval()
+        with torch.no_grad():
+            labels = torch.arange(num_classes, device=device).repeat(5, 1).flatten()
+            images = self.p_sample_loop(images_shape, labels, cfg_scale)
+            grid = make_grid(images, nrow=num_classes, normalize=True)
+        return grid
+
 
     def _extract(self, a, t, x_shape):
         """
