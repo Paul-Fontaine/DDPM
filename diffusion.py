@@ -139,21 +139,21 @@ class GaussianDiffusion(nn.Module):
         return posterior_mean + torch.sqrt(posterior_variance) * noise
 
     @torch.no_grad()
-    def p_sample_loop(self, image_shape, y: List[int | None], cfg_scale: float = 3.0):
+    def p_sample_loop(self, images_shape, y: List[int | None], cfg_scale: float = 3.0):
         """
-        :param image_shape: (C, H, W) — output image image_shape
+        :param images_shape: (C, H, W) — output image image_shape
         :param y: class labels of the images to generate. If labels are None, unconditional generation.
         :param cfg_scale: CFG guidance strength
         :return: [B, C, H, W] generated images
         """
         B = len(y)
-        img = torch.randn(image_shape, device=self.device)
+        imgs = torch.randn(images_shape, device=self.device)
 
         for i in reversed(range(0, self.timesteps)):
             t = torch.full((B,), i, device=self.device, dtype=torch.long)
-            img = self.p_sample(img, t, y=y, cfg_scale=cfg_scale)
+            imgs = self.p_sample(imgs, t, y=y, cfg_scale=cfg_scale)
 
-        return img
+        return imgs
 
     def _extract(self, a, t, x_shape):
         """
