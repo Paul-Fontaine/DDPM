@@ -2,7 +2,7 @@ import torch
 
 class TRAIN_CONFIG:
     num_epochs = 30
-    batch_size = 64
+    batch_size = 32
     lr = 2e-4
     drop_label_prob = 0.1  # For classifier-free guidance
 
@@ -45,3 +45,33 @@ class CONFIG:
     TRAIN = TRAIN_CONFIG()
     MODEL = MODEL_CONFIG(DATASET.num_classes, DATASET.images_shape[0])
     DIFFUSION = DIFFUSION_CONFIG()
+
+    def __str__(self):
+        return (
+            f"CONFIG\n"
+            f"\tdevice: {self.device}\n\n"
+            f"\tDATASET\n"
+            f"\t\tname: {self.DATASET.name}\n"
+            f"\t\tnum_classes: {self.DATASET.num_classes}\n"
+            f"\t\timages shape: {self.DATASET.images_shape}\n\n"
+            f"\tMODEL\n"
+            f"\t\tdown_chs: {self.MODEL.down_chs}\n"
+            f"\t\tdown_sample: {self.MODEL.down_sample}\n"
+            f"\t\tmid_chs: {self.MODEL.mid_chs}\n"
+            f"\t\tup_chs: {self.MODEL.up_chs}\n"
+            f"\t\tt_emb_dim: {self.MODEL.t_emb_dim}\n"
+            f"\t\tnum_downc_layers: {self.MODEL.num_downc_layers}\n"
+            f"\t\tnum_midc_layers: {self.MODEL.num_midc_layers}\n"
+            f"\t\tnum_upc_layers: {self.MODEL.num_upc_layers}\n"
+            f"\t\tcheckpoint: {self.MODEL.checkpoint}\n\n"
+            f"\tDIFFUSION\n"
+            f"\t\ttimesteps: {self.DIFFUSION.timesteps}\n"
+            f"\t\tguidance_strength: {self.DIFFUSION.guidance_strength}\n"
+            f"\t\tbeta_schedule: {self.DIFFUSION.beta_schedule}\n\n"
+            f"\tTRAIN\n"
+            f"\t\tnum_epochs: {self.TRAIN.num_epochs}\n"
+            f"\t\tbatch_size: {self.TRAIN.batch_size}\n"
+            f"\t\tlr: {self.TRAIN.lr}\n"
+            f"\t\tdrop_label_prob: {self.TRAIN.drop_label_prob}\n"
+        )
+

@@ -26,7 +26,7 @@ def train_ddpm():
         print(f"Loading checkpoint from {CONFIG.MODEL.checkpoint}")
         model.load_from_pretrained(CONFIG.MODEL.checkpoint, device=device)
     print(f"Model parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
-    print(model)
+    # print(model)
     diffusion = GaussianDiffusion(model, CONFIG.DIFFUSION.timesteps, CONFIG.DIFFUSION.beta_schedule, device=device)
 
     optimizer = optim.Adam(model.parameters(), lr=CONFIG.TRAIN.lr)
@@ -88,5 +88,6 @@ def train_ddpm():
 
 if __name__ == "__main__":
     print(f"Using device: {CONFIG.device}")
+    print(CONFIG())
 
     train_ddpm()
