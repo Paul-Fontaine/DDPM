@@ -32,7 +32,7 @@ def train_ddpm():
     optimizer = optim.Adam(model.parameters(), lr=CONFIG.TRAIN.lr)
 
     # --- Logging ---
-    time_formatted = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
+    time_formatted = time.strftime("%Y-%m-%d_%Hh%Mm%Ss", time.localtime())
     log_dir = f"logs/{time_formatted}_epochs={epochs}_batch_size={CONFIG.TRAIN.batch_size}_guidance={CONFIG.DIFFUSION.guidance_strength}"
     writer = SummaryWriter(log_dir=log_dir)
 
