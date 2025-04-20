@@ -25,6 +25,8 @@ def train_ddpm():
     if CONFIG.MODEL.checkpoint is not None:
         print(f"Loading checkpoint from {CONFIG.MODEL.checkpoint}")
         model.load_from_pretrained(CONFIG.MODEL.checkpoint, device=device)
+    print(f"Model parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+    print(model)
     diffusion = GaussianDiffusion(model, CONFIG.DIFFUSION.timesteps, CONFIG.DIFFUSION.beta_schedule, device=device)
 
     optimizer = optim.Adam(model.parameters(), lr=CONFIG.TRAIN.lr)
