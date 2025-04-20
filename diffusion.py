@@ -125,7 +125,10 @@ class GaussianDiffusion(nn.Module):
 
         if y is not None:
             eps_cond = self.model(x, t, y)
-            eps = eps_uncond + cfg_scale * (eps_cond - eps_uncond)
+            if not cfg_scale == 0.0:
+                eps = eps_uncond + cfg_scale * (eps_cond - eps_uncond)
+            else:
+                eps = eps_cond
         else:
             eps = eps_uncond
 
