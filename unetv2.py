@@ -591,3 +591,11 @@ class UNet(nn.Module):
         out = self.cv2(out)
 
         return out
+
+    def load_from_pretrained(self, path, device='cpu'):
+        """
+        Load weights from a pretrained model.
+        :param path: path to the pretrained model.
+        """
+        state_dict = torch.load(path, map_location=device, weights_only=True)
+        self.load_state_dict(state_dict)
