@@ -1,7 +1,7 @@
 import torch
 
 class TRAIN_CONFIG:
-    num_epochs = 50
+    num_epochs = 30
     batch_size = 64
     lr = 2e-4
     drop_label_prob = 0.1  # For classifier-free guidance
