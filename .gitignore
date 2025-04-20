@@ -4,5 +4,4 @@ data/
 runs/
 logs/
 samples/
-unet_weights_cuda.pt
-unet_weights_cpu.pt
+unet_weights*
