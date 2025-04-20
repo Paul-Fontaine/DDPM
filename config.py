@@ -34,14 +34,12 @@ class DIFFUSION_CONFIG:
     guidance_strength = 5.0
 
 class DATASET_CONFIG:
-    name = "MNIST" # or "CIFAR10" or "animals"
+    name = "CIFAR10" # or "CIFAR10" or "animals"
     num_classes = 10
-    images_shape = (1, 28, 28)  # MNIST images
+    images_shape = (3, 32, 32)  # (1, 28, 28) for MNIST ¦ (3, 32, 32) for CIFAR10
 
 class CONFIG:
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    images_shape = (1, 28, 28)  # MNIST images
-
 
     DATASET = DATASET_CONFIG()
     TRAIN = TRAIN_CONFIG()
