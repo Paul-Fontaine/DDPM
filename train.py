@@ -1,34 +1,37 @@
 # train.py
+from config import CONFIG
 
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
-from torchvision.utils import make_grid, save_image
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-
-import os
 import time
 
 from dataset import dataset
-from unet import UNet
+from unetv2 import UNet
 from diffusion import GaussianDiffusion
 
 
-def train_ddpm(dataset, epochs, batch_size, lr, images_shape, num_classes, drop_label_prob, guidance, device):
+def train_ddpm():
+    epochs = CONFIG.TRAIN.num_epochs
+    device = CONFIG.device
+
     # --- Dataloader ---
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    loader = DataLoader(dataset, batch_size=CONFIG.TRAIN.batch_size, shuffle=True, num_workers=4)
 
     # --- Model + Diffusion ---
-    model = UNet(num_classes=num_classes, in_ch=1, base_ch=64, depth=2, time_emb_dim=128).to(device)
-    # model.load_from_pretrained("unet_weights_cuda.pt", device=device)
-    diffusion = GaussianDiffusion(model, timesteps=1000, device=device)
+    model = UNet(*CONFIG.MODEL.get_params()).to(device)
+    if CONFIG.MODEL.checkpoint is not None:
+        print(f"Loading checkpoint from {CONFIG.MODEL.checkpoint}")
+        model.load_from_pretrained(CONFIG.MODEL.checkpoint, device=device)
+    diffusion = GaussianDiffusion(model, CONFIG.DIFFUSION.timesteps, CONFIG.DIFFUSION.beta_schedule, device=device)
 
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=CONFIG.TRAIN.lr)
 
     # --- Logging ---
-    n_images_generated_per_class = 2
-    log_dir = f"logs/{int(time.time())}_epochs{epochs}_batch{batch_size}_lr{lr}"
+    time_formatted = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
+    log_dir = f"logs/{time_formatted}_epochs={epochs}_batch_size={CONFIG.TRAIN.batch_size}_guidance={CONFIG.DIFFUSION.guidance_strength}"
     writer = SummaryWriter(log_dir=log_dir)
 
     global_step = 0
@@ -46,8 +49,8 @@ def train_ddpm(dataset, epochs, batch_size, lr, images_shape, num_classes, drop_
                 B = labels.shape[0]
 
                 # --- Drop labels randomly for CFG ---
-                if num_classes is not None:
-                    drop_mask = torch.rand(labels.shape[0], device=device) < drop_label_prob
+                if CONFIG.TRAIN.drop_label_prob > 0:
+                    drop_mask = torch.rand(labels.shape[0], device=device) < CONFIG.TRAIN.drop_label_prob
                     y = labels.clone()
                     y[drop_mask] = -1  # -1 indicates no label
                 else:
@@ -72,35 +75,16 @@ def train_ddpm(dataset, epochs, batch_size, lr, images_shape, num_classes, drop_
         writer.add_scalar("Average Loss", avg_loss, epoch)
 
         # --- Sampling ---
-        grid = diffusion.sample(num_classes, images_shape, guidance, device=device)
+        grid = diffusion.sample()
         writer.add_image("Samples", grid, epoch)
 
         # --- Save checkpoint ---
-        torch.save(model.state_dict(), f"unet_weights_{device.type}.pt")
+        torch.save(model.state_dict(), f"unet_weights_{CONFIG.DATASET.name}_{device.type}.pt")
 
     writer.close()
 
 
 if __name__ == "__main__":
-    # --- Config ---
-    epochs = 40
-    batch_size = 64
-    lr = 2e-4
-    images_shape = (1, 28, 28)  # MNIST images
-    num_classes = 10
-    drop_label_prob = 0.1  # For classifier-free guidance
-    guidance_strength = 5.0
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    print(f"Using device: {CONFIG.device}")
 
-    train_ddpm(
-        dataset=dataset,
-        epochs=epochs,
-        batch_size=batch_size,
-        lr=lr,
-        images_shape=images_shape,
-        num_classes=num_classes,
-        drop_label_prob=drop_label_prob,
-        guidance=guidance_strength,
-        device=device
-    )
+    train_ddpm()

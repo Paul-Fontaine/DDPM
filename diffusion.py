@@ -1,4 +1,5 @@
 # diffusion.py
+from config import CONFIG
 from typing import List
 
 import torch
@@ -156,7 +157,11 @@ class GaussianDiffusion(nn.Module):
 
         return imgs
 
-    def sample(self, num_classes, images_shape, cfg_scale, device):
+    def sample(self,
+               num_classes = CONFIG.DATASET.num_classes,
+               images_shape = CONFIG.DATASET.images_shape,
+               cfg_scale = CONFIG.DIFFUSION.guidance_strength,
+               device = CONFIG.device):
         """
         :return: grid of images with shape [5, num_classes] because it samples 5 images for each class.
         """
