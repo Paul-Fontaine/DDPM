@@ -22,7 +22,7 @@ if __name__ == "__main__":
     diffusion = GaussianDiffusion(model, CONFIG.DIFFUSION.timesteps, CONFIG.DIFFUSION.beta_schedule, device=device)
 
     os.makedirs("samples", exist_ok=True)
-    grid = diffusion.sample()
-    save_name = os.path.join("samples", f"samples_{CONFIG.DATASET.name}_cfg={CONFIG.DIFFUSION.guidance_strength}.png")
+    grid = diffusion.sample(cfg_scale=args.cfg_scale)
+    save_name = os.path.join("samples", f"samples_{CONFIG.DATASET.name}_cfg={args.cfg_scale}.png")
     save_image(grid, save_name, nrow=CONFIG.DATASET.num_classes, normalize=True)
     print(f"Sampled images saved to {save_name}")
