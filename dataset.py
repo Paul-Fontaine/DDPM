@@ -73,7 +73,7 @@ elif CONFIG.DATASET.name == "animals":
                         shutil.copy2(src_file, dst_file)
             print("Merged train and test folders into ./data/animals")
 
-        path = kagglehub.dataset_download("antobenedetti/animals", "./data/animals_/")
+        path = kagglehub.dataset_download("antobenedetti/animals")
         print("Animals dataset downloaded in : ", path)
         fusion_animals(path)
         path_debut = path.split("datasets")[0]
