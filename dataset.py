@@ -1,13 +1,32 @@
 # dataset.py
 from config import CONFIG
+import random
 from torchvision import datasets, transforms
+from torchvision.transforms import functional as F
 
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.5,), (0.5,))  # Normalize to [-1, 1]
 ])
 
+class RandomSquareCrop:
+    def __call__(self, img):
+        width, height = img.size
+        crop_size = min(width, height)
+
+        if width == height:
+            return img
+        elif width > height:
+            left = random.randint(0, width - crop_size)
+            top = 0
+        else:
+            left = 0
+            top = random.randint(0, height - crop_size)
+
+        return F.crop(img, top, left, crop_size, crop_size)
+
 transform_animals = transforms.Compose([
+    RandomSquareCrop(),
     transforms.Resize((CONFIG.DATASET.images_shape[1], CONFIG.DATASET.images_shape[2])),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize to [-1, 1]
