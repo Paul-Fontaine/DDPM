@@ -13,6 +13,8 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--cfg_scale", type=float, default=CONFIG.DIFFUSION.guidance_strength,
                         help="CFG guidance strength (default: value from CONFIG).")
     args = parser.parse_args()
+    cfg_scale = args.cfg_scale
+    print(f"CFG Scale: {cfg_scale}")
 
     device = CONFIG.device
     checkpoint = f"unet_weights_{CONFIG.DATASET.name}_{device.type}.pt"
@@ -22,7 +24,7 @@ if __name__ == "__main__":
     diffusion = GaussianDiffusion(model, CONFIG.DIFFUSION.timesteps, CONFIG.DIFFUSION.beta_schedule, device=device)
 
     os.makedirs("samples", exist_ok=True)
-    grid = diffusion.sample(cfg_scale=args.cfg_scale)
-    save_name = os.path.join("samples", f"samples_{CONFIG.DATASET.name}_cfg={args.cfg_scale}.png")
+    grid = diffusion.sample(cfg_scale=cfg_scale)
+    save_name = os.path.join("samples", f"samples_{CONFIG.DATASET.name}_cfg={cfg_scale}.png")
     save_image(grid, save_name, nrow=CONFIG.DATASET.num_classes, normalize=True)
     print(f"Sampled images saved to {save_name}")
