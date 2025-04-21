@@ -5,6 +5,7 @@ class TRAIN_CONFIG:
     batch_size = 32
     lr = 2e-4
     drop_label_prob = 0.1  # For classifier-free guidance
+    increase_tmax_progressively_until_epoch = 20  # For classifier-free guidance
 
 class MODEL_CONFIG:
     down_chs = (32, 64, 128, 256)

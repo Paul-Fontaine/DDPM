@@ -59,7 +59,11 @@ def train_ddpm():
                     y = None
 
                 # Icrease the maximum noise level linearly
-                t_max = int(diffusion.timesteps * (epoch+1) /10 ) if epoch < 10 else diffusion.timesteps
+                E = CONFIG.TRAIN.increase_tmax_progressively_until_epoch
+                if E is not None:
+                    t_max = int(diffusion.timesteps * (epoch+1) /E ) if epoch < E else diffusion.timesteps
+                else:
+                    t_max = diffusion.timesteps
                 t = torch.randint(0, t_max, (B,), dtype=torch.int16, device=device)
 
                 loss = diffusion.p_losses(images, t, y)
