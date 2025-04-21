@@ -79,4 +79,4 @@ elif CONFIG.DATASET.name == "animals":
         path_debut = path.split("datasets")[0]
         shutil.rmtree(path_debut)
 
-    dataset = datasets.ImageFolder(root="./data/animals/", transform=transform)
+    dataset = datasets.ImageFolder(root="./data/animals/", transform=transform_animals)
