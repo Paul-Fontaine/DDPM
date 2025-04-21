@@ -4,5 +4,5 @@ data/
 runs/
 logs/
 samples/
-unet_weights*
+*.pt
 config.py
