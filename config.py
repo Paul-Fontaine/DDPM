@@ -34,9 +34,9 @@ class DIFFUSION_CONFIG:
     guidance_strength = 5.0
 
 class DATASET_CONFIG:
-    name = "MNIST" # MNIST or "CIFAR10" or "animals"
-    num_classes = 10
-    images_shape = (1, 28, 28)  # (1, 28, 28) for MNIST ¦ (3, 32, 32) for CIFAR10
+    name = "animals" # MNIST or "CIFAR10" or "animals"
+    num_classes = 5
+    images_shape = (3, 64, 64)  # (1, 28, 28) for MNIST ¦ (3, 32, 32) for CIFAR10 ¦ (3, w, h) for animals, it will be resized
 
 class CONFIG:
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
